@@ -24,7 +24,7 @@
 - (IBAction)searchMovie:(id)sender {
     
     
-	NSString *movieSearchName = self.searchBarTextField.text;
+	NSString *movieSearchName = self.searchBarTextField.text;bob
     movieSearchName = [movieSearchName stringByReplacingOccurrencesOfString:@" " withString:@"+"];
     NSURL *url = [NSURL URLWithString:[NSString stringWithFormat:@"http://api.rottentomatoes.com/api/public/v1.0/movies.json?apikey=%@&q=%@&page_limit=1&page=1",API_KEY,movieSearchName]];
     
