@@ -9,6 +9,8 @@
 #import "MovieTrackerViewController.h"
 #import "MovieObject.h"
 #define API_KEY @"w7udff7zxx37pc6jeu6tx8vt"
+#define MAX_SEARCH_MOVIES ((int)50)
+
 
 @interface MovieTrackerViewController ()
 
@@ -27,20 +29,20 @@
 
 	NSString *movieSearchName = self.searchBarTextField.text;
     movieSearchName = [movieSearchName stringByReplacingOccurrencesOfString:@" " withString:@"+"];
-    NSURL *url = [NSURL URLWithString:[NSString stringWithFormat:@"http://api.rottentomatoes.com/api/public/v1.0/movies.json?apikey=%@&q=%@&page_limit=1&page=1",API_KEY,movieSearchName]];
+    NSURL *url = [NSURL URLWithString:[NSString stringWithFormat:@"http://api.rottentomatoes.com/api/public/v1.0/movies.json?apikey=%@&q=%@&page_limit=%d",API_KEY,movieSearchName,MAX_SEARCH_MOVIES]];
     
     
     NSData *data = [NSData dataWithContentsOfURL:url];
     NSError *error;
     NSMutableDictionary *json = [NSJSONSerialization JSONObjectWithData:data options:NSJSONReadingMutableContainers error:&error];
    
-    
     int totalMovies = [json[@"total"] intValue];
-    
+    if (MAX_SEARCH_MOVIES < totalMovies)
+        totalMovies = MAX_SEARCH_MOVIES;
     [self.movieObjectsDisplayArray removeAllObjects];
     
-    for (int i = 1; i <= totalMovies; i++) {
-        [self storeMovieObject:movieSearchName withPageNum:i];
+    for (int i = 0; i < totalMovies; i++) {
+        [self storeMovieObject:movieSearchName withIndex:i withJsonDictionary:json];
     }
     /*
     MovieObject *searchedMovieObject = [[MovieObject alloc]init];
@@ -60,29 +62,23 @@
     //self.movieInformationTableView
     
     
-    /*
+    
     self.movieInformation.text = [NSString stringWithFormat:@"Movie: %@\ndvd release date: %@\ntheater release date: %@",searchedMovieObject.movieTitle,searchedMovieObject.dvdReleaseDate,searchedMovieObject.theaterReleaseDate];
     */
     
     [self.movieInformationTableView reloadData];
     
 }
-- (void)storeMovieObject:(NSString *)movieTitle withPageNum:(int)pageNum
+- (void)storeMovieObject:(NSString *)movieTitle withIndex:(int)index withJsonDictionary:(NSMutableDictionary *)json
 {
-    NSURL *url = [NSURL URLWithString:[NSString stringWithFormat:@"http://api.rottentomatoes.com/api/public/v1.0/movies.json?apikey=%@&q=%@&page_limit=1&page=%d",API_KEY,movieTitle,pageNum]];
     
-    
-    NSData *data = [NSData dataWithContentsOfURL:url];
-    NSError *error;
-    NSMutableDictionary *json = [NSJSONSerialization JSONObjectWithData:data options:NSJSONReadingMutableContainers error:&error];
     MovieObject *searchedMovieObject = [[MovieObject alloc]init];
-    
     NSArray *movies = json[@"movies"];
-    searchedMovieObject.movieTitle = movies[0][@"title"];
-    NSDictionary *releaseDates = movies[0][@"release_dates"];
+    searchedMovieObject.movieTitle = movies[index][@"title"];
+    NSDictionary *releaseDates = movies[index][@"release_dates"];
     searchedMovieObject.dvdReleaseDate = releaseDates[@"dvd"];
     searchedMovieObject.theaterReleaseDate = releaseDates[@"theater"];
-    searchedMovieObject.imageURL = movies[0][@"posters"][@"thumbnail"];
+    searchedMovieObject.imageURL = movies[index][@"posters"][@"thumbnail"];
     
     [self.movieObjectsDisplayArray addObject:searchedMovieObject];
     
